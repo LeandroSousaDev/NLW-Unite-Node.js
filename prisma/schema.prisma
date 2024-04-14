@@ -14,11 +14,25 @@ datasource db {
 }
 
 model Event {
-  id              String  @id @default(uuid())
+  id              String     @id @default(uuid())
   title           String
   details         String?
-  slug            String  @unique
-  maximumAttndees Int?    @map("maximum_attndees")
+  slug            String     @unique
+  maximumAttndees Int?       @map("maximum_attndees")
+  Attendee        Attendee[]
 
   @@map("events")
+}
+
+model Attendee {
+  id       Int      @id @default(autoincrement())
+  name     String
+  email    String
+  createAt DateTime @default(now()) @map("create_at")
+  eventId  String   @map("event_id")
+
+  event Event @relation(fields: [eventId], references: [id])
+
+  @@unique([eventId, email])
+  @@map("attendees")
 }
