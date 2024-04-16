@@ -8,10 +8,21 @@ export async function getAttendeeBadge(app: FastifyInstance) {
         .withTypeProvider<ZodTypeProvider>()
         .get('/attendees/:attendeeId/badge', {
             schema: {
+                summary: 'busca um participante distinto',
+                tags: ['attendees'],
                 params: z.object({
                     attendeeId: z.coerce.number().int()
                 }),
-                response: {}
+                response: {
+                    200: z.object({
+                        badge: z.object({
+                            name: z.string(),
+                            email: z.string().email(),
+                            eventTitle: z.string(),
+                            checkinURL: z.string().url()
+                        })
+                    })
+                }
             }
         }, async (req, res) => {
 
@@ -36,7 +47,17 @@ export async function getAttendeeBadge(app: FastifyInstance) {
                 throw new Error('Participante não encontrado')
             }
 
-            return res.send({ attendee })
+            const baseURL = `${req.protocol}://${req.hostname}`
 
+            const checkinURL = new URL(`attendees/${attendeeId}/check-in`, baseURL)
+
+            return res.send({
+                badge: {
+                    name: attendee.name,
+                    email: attendee.email,
+                    eventTitle: attendee.event.title,
+                    checkinURL: checkinURL.toString()
+                }
+            })
         })
 }
